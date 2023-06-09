@@ -1,0 +1,38 @@
+# pyproject.toml
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools",
+    "wheel",
+    "setuptools-git-versioning<2",
+]
+
+[project]
+name = "PrimerDesigner"
+authors = [
+    {name = "Demetri Patrinos", email = "patrinosd25@mail.wlu.edu "},
+]
+description = "A tool for designing primers to target exon-exon splice junctions in mRatBN7.2 RNA-Seq data"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GNU General Public License v3.0", file = "LICENSE"}
+keywords = ["primer", "RNA-Seq", "STAR", "splice", "junction"]
+dependencies = [
+    "pandas",
+    "fastaparser",
+    "argparse",
+]
+dynamic = ["version"]
+
+[project.scripts]
+primerdesigner = "primerdesigner.primerdesigner:main"
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+primerdesigner = ["data/*"]
