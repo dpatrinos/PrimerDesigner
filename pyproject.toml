@@ -16,7 +16,7 @@ authors = [
 description = "A tool for designing primers to target exon-exon splice junctions in mRatBN7.2 RNA-Seq data"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "GNU General Public License v3.0", file = "LICENSE"}
+license = {file = "LICENSE"}
 keywords = ["primer", "RNA-Seq", "STAR", "splice", "junction"]
 dependencies = [
     "pandas",

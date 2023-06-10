@@ -3,22 +3,25 @@
 
 import pandas as pd
 import fastaparser as fp
-from argparse import ArgumentParser 
+from argparse import ArgumentParser
+import pkg_resources
 import pathlib
 import gzip
 import os
 import sys
 
 def fromCoordinates(molecule_chromosome, start_pos, stop_pos, bp_left, bp_right, destination_dir):
+    DATA_PATH = pkg_resources.resource_filename("primerdesigner", "data")
+
     if "NC_" in molecule_chromosome:
-        with open(os.path.join("src", "primerdesigner", "data", "chr2acc.txt"), "r") as f:
+        with open(os.path.abspath(os.path.join(DATA_PATH, "chr2acc.txt")), "r") as f:
             chr2acc = pd.read_csv(f, sep="\t", header=None, comment = "#")
             chromosome = chr2acc.loc[chr2acc[1] == molecule_chromosome, 0].iloc[0]
     
     else:
         chromosome = molecule_chromosome
     
-    with gzip.open(os.path.join("src", "primerdesigner", "data", "chr{}.fna.gz".format(chromosome)), mode="rt") as f:
+    with gzip.open(os.path.abspath(os.path.join(DATA_PATH, "chr{}.fna.gz".format(chromosome))), mode="rt") as f:
         next(f)
         chromosome_sequence = f.read().replace("\n", "")
 
@@ -41,7 +44,7 @@ def fromCoordinates(molecule_chromosome, start_pos, stop_pos, bp_left, bp_right,
 def fromSJDataset(intron_X, bp_left, bp_right, sj_path, destination_dir):
     if sj_path.endswith(".csv"):
         with open(sj_path, "r") as f:
-            sj_dataset = pd.read_csv(f)#, header=None)
+            sj_dataset = pd.read_csv(f)
 
     elif sj_path.endswith(".tab"):
         with open(sj_path, "r") as f:
@@ -62,30 +65,33 @@ def main():
     )
 
     run_mode = parser.add_mutually_exclusive_group(required=True)
-    run_mode.add_argument('--coordinates', action='store_true', help="Create a sequence from a chromosome, start position, and stop position")
-    run_mode.add_argument('--sjDataset', action='store_true', help="Create a sequence from a X-labeled splice junction dataset")
-
-    parser.add_argument('--bpLeft', default=150, type=int, help='Number of bases to the left of the start position to include')
-    parser.add_argument('--bpRight', default=150, type=int, help='Number of bases to the right of the stop position to include')
+    run_mode.add_argument('-c', '--coordinates', action='store_true', help="Create a sequence from a chromosome, start position, and stop position")
+    run_mode.add_argument('-s', '--sjDataset', action='store_true', help="Create a sequence from a X-labeled splice junction dataset. See --sjDatasetPath for more information")
 
     molecule_chromosome = parser.add_mutually_exclusive_group(required='--coordinates' in sys.argv)
-    molecule_chromosome.add_argument('--accessionVersion', required='--coordinates' in sys.argv, type=str, help='Molecule name as accession.version (e.g. NC_000001.11)')
-    molecule_chromosome.add_argument('--chromosome', required='--coordinates' in sys.argv, type=str, help='Chromosome number')
+    molecule_chromosome.add_argument('--accessionVersion', type=str, help='Molecule name as accession.version (e.g. NC_000001.11)')
+    molecule_chromosome.add_argument('--chromosome', type=str, help='Chromosome number (e.g. 1). Note: Either --accessionVersion or --chromosome must be specified, but not both')
     parser.add_argument('--startPos', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
     parser.add_argument('--stopPos', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
 
-    parser.add_argument('--intronX', required='--sjDataset' in sys.argv, type=str, help='Intron X of the splice junction to use')
-    parser.add_argument('--sjDatasetPath', required='--sjDataset' in sys.argv, type=str, help='Path to the splice junction dataset: /path/to/sjdblist.csv or /path/to/sjdblist.tab\n\tNote: the splice junction dataset must be in the format of Column 1: X; Column 2: Accession Version; Column 3: Start Position; Column 4: Stop Position')
+    parser.add_argument('--intronX', required='--sjDataset' in sys.argv, type=int, help='Intron X of the splice junction to use')
+    parser.add_argument('--sjPath', required='--sjDataset' in sys.argv, type=str, help='Path to the splice junction dataset: /path/to/sjdblist.csv or /path/to/sjdblist.tab. Note: the splice junction dataset must be in the format of Column 1: X; Column 2: Accession Version; Column 3: Start Position; Column 4: Stop Position')
 
-    parser.add_argument('--destinationDir', required=True, type=str, help='Directory to save the sequence to: /path/to/destination')
+    parser.add_argument('--bpLeft', default=150, type=int, help='Number of bases to the left of the start position to include. Default: 150bp')
+    parser.add_argument('--bpRight', default=150, type=int, help='Number of bases to the right of the stop position to include. Default: 150bp')
+
+    parser.add_argument('--destination', required=True, type=str, help='Path to directory to save the sequence to: /path/to/destination')
 
     args = parser.parse_args()
 
-    if not pathlib.Path(args.destination_dir).expanduser().resolve().exists():
+    if not pathlib.Path(args.destination).expanduser().resolve().exists():
         parser.exit(1, message="Destination directory does not exist")
 
-    if args.run_mode == "coordinates":
-        fromCoordinates(args.molecule_chromosome, args.start_pos, args.stopPos, args.bpLeft, args.bpRight, args.destinationDir)
+    if args.coordinates == True:
+        if args.accessionVersion != None:
+            fromCoordinates(args.accessionVersion, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
+        elif args.chromosome != None:
+            fromCoordinates(args.chromosome, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
     
-    elif args.run_mode == "sjDataset":
-        fromSJDataset(args.intronX, args.bpLeft, args.bpRight, args.sjDatasetPath, args.destinationDir)
+    elif args.sjDataset == True:
+        fromSJDataset(args.intronX, args.bpLeft, args.bpRight, args.sjPath, args.destination)

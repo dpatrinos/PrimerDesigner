@@ -1,7 +1,6 @@
 import pytest
 import sys
 import os
-import tempfile
 
 sys.path.append('src/primerdesigner')
 from primerdesigner import fromCoordinates
@@ -13,7 +12,7 @@ def test_fromCoordinates_chromosome(tmpdir):
     assert os.path.exists(os.path.join(tmpdir, "chr1_163310-163645.fasta"))
     assert os.path.getsize(os.path.join(tmpdir, "chr1_163310-163645.fasta")) > 0
     with open(os.path.join(tmpdir, "chr1_163310-163645.fasta"), "r") as f:
-        with open("tests/test_fromCoordinates.fasta", "r") as f2:
+        with open(os.path.abspath(os.path.join("tests", "test_fromCoordinates.fasta")), "r") as f2:
             assert f.read() == f2.read()
 
 def test_fromCoordinates_acc(tmpdir):
@@ -22,7 +21,7 @@ def test_fromCoordinates_acc(tmpdir):
     assert os.path.exists(os.path.join(tmpdir, "chr1_163310-163645.fasta"))
     assert os.path.getsize(os.path.join(tmpdir, "chr1_163310-163645.fasta")) > 0
     with open(os.path.join(tmpdir, "chr1_163310-163645.fasta"), "r") as f:
-        with open("tests/test_fromCoordinates.fasta", "r") as f2:
+        with open(os.path.abspath(os.path.join("tests", "test_fromCoordinates.fasta")), "r") as f2:
             assert f.read() == f2.read()
 
 def test_fromSJDataset(tmpdir):
@@ -31,5 +30,5 @@ def test_fromSJDataset(tmpdir):
     assert os.path.exists(os.path.join(tmpdir, "chr1_163310-163645.fasta"))
     assert os.path.getsize(os.path.join(tmpdir, "chr1_163310-163645.fasta")) > 0
     with open(os.path.join(tmpdir, "chr1_163310-163645.fasta"), "r") as f:
-        with open("tests/test_fromCoordinates.fasta", "r") as f2:
+        with open(os.path.abspath(os.path.join("tests", "test_fromCoordinates.fasta")), "r") as f2:
             assert f.read() == f2.read()
