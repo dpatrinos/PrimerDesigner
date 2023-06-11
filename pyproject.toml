@@ -13,15 +13,14 @@ name = "PrimerDesigner"
 authors = [
     {name = "Demetri Patrinos", email = "patrinosd25@mail.wlu.edu "},
 ]
-description = "A tool for designing primers to target exon-exon splice junctions in mRatBN7.2 RNA-Seq data"
+description = "A tool for creating sequences to use for designing primers to target exon-exon splice junctions in mRatBN7.2 RNA-seq data"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {file = "LICENSE"}
-keywords = ["primer", "RNA-Seq", "STAR", "splice", "junction"]
+keywords = ["primers", "RNA-Seq", "splice", "junction"]
 dependencies = [
-    "pandas",
-    "fastaparser",
-    "argparse",
+    "pandas>=1.4",
+    "fastaparser>=1.1",
 ]
 dynamic = ["version"]
 

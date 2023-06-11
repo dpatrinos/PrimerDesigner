@@ -2,7 +2,7 @@
 # PrimerDesigner
 [![GNU General Public License 3.0](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/dpatrinos/PrimerDesigner/blob/main/LICENSE)
 
-A python-based CLI that uses the NCBI mRatBN7.2 assembly to create fasta files for the creation of primers to target exon-exon junctions
+A Python-based CLI that uses the NCBI mRatBN7.2 assembly to create nucleotide sequences for the designing of primers to target exon-exon splice junctions
 
 ## Installation
 
