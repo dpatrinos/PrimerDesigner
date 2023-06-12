@@ -66,11 +66,11 @@ def main():
 
     run_mode = parser.add_mutually_exclusive_group(required=True)
     run_mode.add_argument('-c', '--coordinates', action='store_true', help="Create a sequence from a chromosome, start position, and stop position")
-    run_mode.add_argument('-s', '--sjDataset', action='store_true', help="Create a sequence from a X-labeled splice junction dataset. See --sjDatasetPath for more information")
+    run_mode.add_argument('-s', '--sjDataset', action='store_true', help="Create a sequence from a X-labeled splice junction dataset. See --sjPath for more information")
 
     molecule_chromosome = parser.add_mutually_exclusive_group(required='--coordinates' in sys.argv)
-    molecule_chromosome.add_argument('--accessionVersion', type=str, help='Molecule name as accession.version (e.g. NC_000001.11)')
-    molecule_chromosome.add_argument('--chromosome', type=str, help='Chromosome number (e.g. 1). Note: Either --accessionVersion or --chromosome must be specified, but not both')
+    molecule_chromosome.add_argument('--accVersion', type=str, help='Molecule name as accession.version (e.g. NC_000001.11)')
+    molecule_chromosome.add_argument('--chromosome', type=str, help='Chromosome number (e.g. 1). Note: Either --accVersion or --chromosome must be specified, but not both')
     parser.add_argument('--startPos', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
     parser.add_argument('--stopPos', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
 
@@ -88,8 +88,8 @@ def main():
         parser.exit(1, message="Destination directory does not exist")
 
     if args.coordinates == True:
-        if args.accessionVersion != None:
-            fromCoordinates(args.accessionVersion, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
+        if args.accVersion != None:
+            fromCoordinates(args.accVersion, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
         elif args.chromosome != None:
             fromCoordinates(args.chromosome, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
     
