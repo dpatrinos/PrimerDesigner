@@ -7,9 +7,9 @@ A Python-based CLI that uses the NCBI mRatBN7.2 assembly to create nucleotide se
 ## Installation
 
 ```sh
-$ wget https://github.com/dpatrinos/PrimerDesigner/archive/refs/tags/v0.1.0.tar.gz
-$ tar -xzf v0.1.0.tar.gz
-$ pip install -e PrimerDesigner-0.1.0
+$ wget https://github.com/dpatrinos/PrimerDesigner/archive/refs/tags/v0.1.1.tar.gz
+$ tar -xzf v0.1.1.tar.gz
+$ pip install -e PrimerDesigner-0.1.1
 ```
 
 ## Usage
