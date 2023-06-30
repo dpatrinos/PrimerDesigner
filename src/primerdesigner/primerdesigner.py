@@ -10,7 +10,7 @@ import gzip
 import os
 import sys
 
-def fromCoordinates(molecule_chromosome, start_pos, stop_pos, bp_left, bp_right, destination_dir):
+def fromCoordinates(molecule_chromosome, strand, start_pos, stop_pos, bp_left, bp_right, destination):
     DATA_PATH = pkg_resources.resource_filename("primerdesigner", "data")
 
     if "NC_" in molecule_chromosome:
@@ -23,25 +23,29 @@ def fromCoordinates(molecule_chromosome, start_pos, stop_pos, bp_left, bp_right,
     
     with gzip.open(os.path.abspath(os.path.join(DATA_PATH, "chr{}.fna.gz".format(chromosome))), mode="rt") as f:
         next(f)
-        chromosome_sequence = f.read().replace("\n", "")
+        chromosome_sequence = "X" + f.read().replace("\n", "") # X is a dummy character to make the sequence 1-based
 
     print("Chromosome", chromosome, "sequence loaded")
-
-    five_sequence = chromosome_sequence[(start_pos-bp_left-1):start_pos]
-    three_sequence = chromosome_sequence[(stop_pos+1):(stop_pos+bp_right)]
+    
+    five_sequence = chromosome_sequence[(start_pos-bp_left):start_pos]
+    three_sequence = chromosome_sequence[(stop_pos+1):(stop_pos+bp_right+1)]
     complete_sequence = five_sequence + three_sequence
     print(str(len(complete_sequence)) + "bp sequence length constructed")
+        
+    if strand == "-":
+        complement_sequence = fp.FastaSequence(complete_sequence).complement(reverse=True).sequence_as_string()
+        complete_sequence = complement_sequence
 
-    destination_dir = pathlib.Path(destination_dir).expanduser().resolve()
+    destination = pathlib.Path(destination).expanduser().resolve()
 
-    with open(os.path.join(destination_dir, "chr{}_{}-{}.fasta".format(chromosome, start_pos, stop_pos)), "w") as fasta_file:
+    with open(os.path.join(destination, "chr{}_{}-{}.fasta".format(chromosome, start_pos, stop_pos)), "w") as fasta_file:
         writer = fp.Writer(fasta_file)
-        header = ('Sequence spanning exon-exon junction of intron {}:{} on chromosome {}').format(start_pos, stop_pos, chromosome)
+        header = ('{} strand sequence spanning exon-exon junction of intron {}:{} on chromosome {} [{}bp left; {}bp right]').format(strand, start_pos, stop_pos, chromosome, bp_left, bp_right)
         writer.writefasta((header, complete_sequence))
     
-    print("chr{}_{}-{}.fasta".format(chromosome, start_pos, stop_pos) + " created in " + str(destination_dir))
+    print("chr{}_{}-{}.fasta".format(chromosome, start_pos, stop_pos) + " created in " + str(destination))
 
-def fromSJDataset(intron_X, bp_left, bp_right, sj_path, destination_dir):
+def fromSJDataset(intron_X, strand, bp_left, bp_right, sj_path, destination):
     if sj_path.endswith(".csv"):
         with open(sj_path, "r") as f:
             sj_dataset = pd.read_csv(f)
@@ -54,9 +58,9 @@ def fromSJDataset(intron_X, bp_left, bp_right, sj_path, destination_dir):
     molecule = row.iat[0, 1]
     start_pos = int(row.iat[0, 2])
     stop_pos = int(row.iat[0, 3])
-    print("\nNovel intron " + str(intron_X) + "\n" + molecule + ": " + str(start_pos) + ":" + str(stop_pos))
+    print("\nIntron " + str(intron_X) + "\n" + molecule + ": " + str(start_pos) + ":" + str(stop_pos))
 
-    fromCoordinates(molecule, start_pos, stop_pos, bp_left, bp_right, destination_dir)
+    fromCoordinates(molecule, strand, start_pos, stop_pos, bp_left, bp_right, destination)
 
 def main():
     parser = ArgumentParser(
@@ -66,32 +70,37 @@ def main():
 
     run_mode = parser.add_mutually_exclusive_group(required=True)
     run_mode.add_argument('-c', '--coordinates', action='store_true', help="Create a sequence from a chromosome, start position, and stop position")
-    run_mode.add_argument('-s', '--sjDataset', action='store_true', help="Create a sequence from a X-labeled splice junction dataset. See --sjPath for more information")
+    run_mode.add_argument('-s', '--sj', action='store_true', help="Create a sequence from a X-labeled splice junction dataset. See --sjPath for more information")
 
-    molecule_chromosome = parser.add_mutually_exclusive_group(required='--coordinates' in sys.argv)
-    molecule_chromosome.add_argument('--accVersion', type=str, help='Molecule name as accession.version (e.g. NC_000001.11)')
-    molecule_chromosome.add_argument('--chromosome', type=str, help='Chromosome number (e.g. 1). Note: Either --accVersion or --chromosome must be specified, but not both')
-    parser.add_argument('--startPos', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
-    parser.add_argument('--stopPos', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
+    strand = parser.add_mutually_exclusive_group(required=True)
+    strand.add_argument('-p', '--plus', action='store_true', help='Intron is on the plus strand')
+    strand.add_argument('-m', '--minus', action='store_true', help='Intron is on the minus strand')
 
-    parser.add_argument('--intronX', required='--sjDataset' in sys.argv, type=int, help='Intron X of the splice junction to use')
-    parser.add_argument('--sjPath', required='--sjDataset' in sys.argv, type=str, help='Path to the splice junction dataset: /path/to/sjdblist.csv or /path/to/sjdblist.tab. Note: the splice junction dataset must be in the format of Column 1: X; Column 2: Accession Version; Column 3: Start Position; Column 4: Stop Position')
+    parser.add_argument('--chr', required='--coordinates' in sys.argv, type=str, help='Chromosome number (e.g. 1)')
+    parser.add_argument('--start', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
+    parser.add_argument('--stop', required='--coordinates' in sys.argv, type=int, help='Chromosome-relative coordinate of the start of the intron')
 
-    parser.add_argument('--bpLeft', default=150, type=int, help='Number of bases to the left of the start position to include. Default: 150bp')
-    parser.add_argument('--bpRight', default=150, type=int, help='Number of bases to the right of the stop position to include. Default: 150bp')
+    parser.add_argument('--intron', required='--sj' in sys.argv, type=int, help='Intron X of the splice junction to use')
+    parser.add_argument('--sjPath', required='--sj' in sys.argv, type=str, help='Path to the splice junction dataset: /path/to/sjdblist.csv or /path/to/sjdblist.tab. Note: the splice junction dataset must be in the format of Column 1: X; Column 2: Accession Version; Column 3: Start Position; Column 4: Stop Position')
 
-    parser.add_argument('--destination', required=True, type=str, help='Path to directory to save the sequence to: /path/to/destination')
+    parser.add_argument('--left', default=150, type=int, help='Number of bases to the left of the start position to include. Default: 150bp')
+    parser.add_argument('--right', default=150, type=int, help='Number of bases to the right of the stop position to include. Default: 150bp')
+
+    parser.add_argument('--destination', default=os.getcwd(), type=str, help='Path to directory to save the sequence to /path/to/destination. Default: current working directory')
 
     args = parser.parse_args()
 
     if not pathlib.Path(args.destination).expanduser().resolve().exists():
         parser.exit(1, message="Destination directory does not exist")
 
+    if args.plus == True:
+        strand_char = "+"
+
+    else:
+        strand_char = "-"
+
     if args.coordinates == True:
-        if args.accVersion != None:
-            fromCoordinates(args.accVersion, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
-        elif args.chromosome != None:
-            fromCoordinates(args.chromosome, args.startPos, args.stopPos, args.bpLeft, args.bpRight, args.destination)
-    
-    elif args.sjDataset == True:
-        fromSJDataset(args.intronX, args.bpLeft, args.bpRight, args.sjPath, args.destination)
+        fromCoordinates(args.chr, strand_char, args.start, args.stop, args.left, args.right, args.destination)
+
+    elif args.sj == True:
+        fromSJDataset(args.intron, strand_char, args.left, args.right, args.sjPath, args.destination)
