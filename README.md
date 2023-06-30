@@ -1,4 +1,3 @@
-
 # PrimerDesigner
 [![GNU General Public License 3.0](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/dpatrinos/PrimerDesigner/blob/main/LICENSE)
 
@@ -18,6 +17,8 @@ $ pip install -e PrimerDesigner-0.2.0
 $ primerdesigner -h
 
 ### OUTPUT
+# usage: primerdesigner [-h] (-c | -s) (-p | -m) [--chr CHR] [--start START] [--stop STOP] [--intron INTRON] [--sjPath SJPATH] [--left LEFT] [--right RIGHT]
+#                       [--destination DESTINATION]
 # usage: primerdesigner [-h] (-c | -s) (-p | -m) [--chr CHR] [--start START] [--stop STOP] [--intron INTRON] [--sjPath SJPATH] [--left LEFT] [--right RIGHT]
 #                       [--destination DESTINATION]
 # 
@@ -52,6 +53,7 @@ $ primerdesigner -c -p --chr 1 --start 163310 --stop 163645
 # Chromosome 1 sequence loaded
 # 300bp sequence length constructed
 # chr1_163310-163645.fasta created in /current/working/directory
+# chr1_163310-163645.fasta created in /current/working/directory
 ```
 
 ### Generate sequences from an X-labeled splice junction dataset
@@ -61,9 +63,11 @@ $ primerdesigner -s -p --intron 1 --sjPath /path/to/sjdblist.csv
 
 ### OUTPUT
 # Intron 1
+# Intron 1
 # NC_051336.1: 163310:163645
 # Chromosome 1 sequence loaded
 # 300bp sequence length constructed
+# chr1_163310-163645.fasta created in /current/working/directory
 # chr1_163310-163645.fasta created in /current/working/directory
 ```
 
